@@ -1,0 +1,155 @@
+/* ===============================
+   CREATE DATABASE
+================================ */
+CREATE DATABASE LibraryDB;
+USE LibraryDB;
+
+/* ===============================
+   TABLES
+================================ */
+
+CREATE TABLE LIBRARY_BRANCH (
+    BranchID INT PRIMARY KEY,
+    BranchName VARCHAR(50) NOT NULL,
+    Address VARCHAR(100)
+);
+
+CREATE TABLE BORROWER (
+    CardNo INT PRIMARY KEY,
+    Name VARCHAR(50) NOT NULL,
+    Address VARCHAR(100),
+    Phone VARCHAR(20)
+);
+
+CREATE TABLE PUBLISHER (
+    PublisherName VARCHAR(50) PRIMARY KEY,
+    Address VARCHAR(100),
+    Phone VARCHAR(20)
+);
+
+CREATE TABLE BOOKS (
+    BookID INT PRIMARY KEY,
+    Title VARCHAR(100) NOT NULL,
+    PublisherName VARCHAR(50),
+    FOREIGN KEY (PublisherName)
+        REFERENCES PUBLISHER(PublisherName)
+);
+
+CREATE TABLE BOOK_AUTHORS (
+    BookID INT,
+    AuthorName VARCHAR(50),
+    PRIMARY KEY (BookID, AuthorName),
+    FOREIGN KEY (BookID)
+        REFERENCES BOOKS(BookID)
+);
+
+CREATE TABLE BOOK_COPIES (
+    BookID INT,
+    BranchID INT,
+    Number_Of_Copies INT,
+    PRIMARY KEY (BookID, BranchID),
+    FOREIGN KEY (BookID) REFERENCES BOOKS(BookID),
+    FOREIGN KEY (BranchID) REFERENCES LIBRARY_BRANCH(BranchID)
+);
+
+CREATE TABLE BOOK_LOANS (
+    BookID INT,
+    BranchID INT,
+    CardNo INT,
+    DateOut DATE,
+    DateDue DATE,
+    PRIMARY KEY (BookID, BranchID, CardNo, DateOut),
+    FOREIGN KEY (BookID) REFERENCES BOOKS(BookID),
+    FOREIGN KEY (BranchID) REFERENCES LIBRARY_BRANCH(BranchID),
+    FOREIGN KEY (CardNo) REFERENCES BORROWER(CardNo)
+);
+
+/* ===============================
+   INSERT DATA
+================================ */
+
+-- LIBRARY_BRANCH
+INSERT INTO LIBRARY_BRANCH VALUES
+(1, 'Sharpstown', '12 Main St'),
+(2, 'Central', '45 Center St'),
+(3, 'Westside', '78 West St');
+
+-- BORROWER
+INSERT INTO BORROWER VALUES
+(100, 'Alice Johnson', '1 Pine St', '555-1111'),
+(101, 'Bob Smith', '2 Oak St', '555-2222'),
+(102, 'Carol White', '3 Elm St', '555-3333');
+
+-- PUBLISHER
+INSERT INTO PUBLISHER VALUES
+('Penguin', 'NY', '111-1111'),
+('HarperCollins', 'LA', '222-2222'),
+('RandomHouse', 'Chicago', '333-3333');
+
+-- BOOKS (includes "The Lost Tribe")
+INSERT INTO BOOKS VALUES
+(1, 'The Lost Tribe', 'Penguin'),
+(2, 'Database Systems', 'HarperCollins'),
+(3, 'SQL Mastery', 'RandomHouse');
+
+-- BOOK_AUTHORS
+INSERT INTO BOOK_AUTHORS VALUES
+(1, 'John Writer'),
+(2, 'Jane Data'),
+(3, 'Alan Query');
+
+-- BOOK_COPIES
+INSERT INTO BOOK_COPIES VALUES
+(1, 1, 5),
+(1, 2, 3),
+(2, 1, 4),
+(3, 3, 6);
+
+-- BOOK_LOANS
+INSERT INTO BOOK_LOANS VALUES
+(1, 1, 100, '2024-01-01', '2024-01-10'),
+(2, 1, 101, '2024-01-02', '2024-01-11'),
+(3, 3, 102, '2024-01-03', '2024-01-12');
+
+
+/* ===============================
+   REQUIRED QUERIES
+================================ */
+
+-- How many copies of "The Lost Tribe" are owned by Sharpstown?
+SELECT bc.Number_Of_Copies
+FROM BOOK_COPIES bc
+JOIN BOOKS b ON bc.BookID = b.BookID
+JOIN LIBRARY_BRANCH lb ON bc.BranchID = lb.BranchID
+WHERE b.Title = 'The Lost Tribe'
+AND lb.BranchName = 'Sharpstown';
+
+
+-- How many copies of "The Lost Tribe" are owned by each branch?
+SELECT lb.BranchName, bc.Number_Of_Copies
+FROM BOOK_COPIES bc
+JOIN BOOKS b ON bc.BookID = b.BookID
+JOIN LIBRARY_BRANCH lb ON bc.BranchID = lb.BranchID
+WHERE b.Title = 'The Lost Tribe';
+
+
+-- Borrowers with no books checked out
+SELECT b.Name
+FROM BORROWER b
+LEFT JOIN BOOK_LOANS bl ON b.CardNo = bl.CardNo
+WHERE bl.CardNo IS NULL;
+
+
+-- Books loaned from Sharpstown with borrower name
+SELECT bk.Title, br.Name, bl.DateOut, bl.DateDue
+FROM BOOK_LOANS bl
+JOIN BOOKS bk ON bl.BookID = bk.BookID
+JOIN BORROWER br ON bl.CardNo = br.CardNo
+JOIN LIBRARY_BRANCH lb ON bl.BranchID = lb.BranchID
+WHERE lb.BranchName = 'Sharpstown';
+
+
+-- Book title + author name
+SELECT b.Title, ba.AuthorName
+FROM BOOKS b
+JOIN BOOK_AUTHORS ba ON b.BookID = ba.BookID;
