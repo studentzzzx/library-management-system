@@ -39,8 +39,7 @@ CREATE TABLE BOOK_AUTHORS (
     BookID INT,
     AuthorName VARCHAR(50),
     PRIMARY KEY (BookID, AuthorName),
-    FOREIGN KEY (BookID)
-        REFERENCES BOOKS(BookID)
+    FOREIGN KEY (BookID) REFERENCES BOOKS(BookID)
 );
 
 CREATE TABLE BOOK_COPIES (
@@ -68,88 +67,138 @@ CREATE TABLE BOOK_LOANS (
    INSERT DATA
 ================================ */
 
--- LIBRARY_BRANCH
+-- 6 BRANCHES
 INSERT INTO LIBRARY_BRANCH VALUES
-(1, 'Sharpstown', '12 Main St'),
-(2, 'Central', '45 Center St'),
-(3, 'Westside', '78 West St');
+(1,'Sharpstown','12 Main St'),
+(2,'Central','45 Center St'),
+(3,'Westside','78 West St'),
+(4,'Northside','90 North St'),
+(5,'Southside','21 South St'),
+(6,'Eastside','33 East St');
 
--- BORROWER
+-- 8 BORROWERS
 INSERT INTO BORROWER VALUES
-(100, 'Alice Johnson', '1 Pine St', '555-1111'),
-(101, 'Bob Smith', '2 Oak St', '555-2222'),
-(102, 'Carol White', '3 Elm St', '555-3333');
+(100,'Alice Johnson','1 Pine St','555-1111'),
+(101,'Bob Smith','2 Oak St','555-2222'),
+(102,'Carol White','3 Elm St','555-3333'),
+(103,'David Green','4 Maple St','555-4444'),
+(104,'Emma Brown','5 Cedar St','555-5555'),
+(105,'Frank Black','6 Birch St','555-6666'),
+(106,'Grace Lee','7 Willow St','555-7777'),
+(107,'Henry King','8 Lake St','555-8888');
 
--- PUBLISHER
+-- 10 PUBLISHERS
 INSERT INTO PUBLISHER VALUES
-('Penguin', 'NY', '111-1111'),
-('HarperCollins', 'LA', '222-2222'),
-('RandomHouse', 'Chicago', '333-3333');
+('Penguin','NY','111-1111'),
+('HarperCollins','LA','222-2222'),
+('RandomHouse','Chicago','333-3333'),
+('OReilly','CA','444-4444'),
+('Pearson','TX','555-5555'),
+('McGrawHill','NY','666-6666'),
+('Springer','Berlin','777-7777'),
+('Oxford','UK','888-8888'),
+('Cambridge','UK','999-9999'),
+('Packt','UK','000-0000');
 
--- BOOKS (includes "The Lost Tribe")
+-- 20 BOOKS (includes "The Lost Tribe")
 INSERT INTO BOOKS VALUES
-(1, 'The Lost Tribe', 'Penguin'),
-(2, 'Database Systems', 'HarperCollins'),
-(3, 'SQL Mastery', 'RandomHouse');
+(1,'The Lost Tribe','Penguin'),
+(2,'Database Systems','HarperCollins'),
+(3,'SQL Mastery','RandomHouse'),
+(4,'Networks','Pearson'),
+(5,'Operating Systems','McGrawHill'),
+(6,'AI Basics','Springer'),
+(7,'Machine Learning','Oxford'),
+(8,'Cloud Computing','Cambridge'),
+(9,'Cyber Security','OReilly'),
+(10,'Algorithms','Pearson'),
+(11,'Data Science','Springer'),
+(12,'Python Programming','Packt'),
+(13,'Java Programming','Packt'),
+(14,'C Programming','McGrawHill'),
+(15,'Software Engineering','Oxford'),
+(16,'Distributed Systems','Cambridge'),
+(17,'Computer Graphics','Pearson'),
+(18,'Big Data','Springer'),
+(19,'Web Development','Packt'),
+(20,'Mobile Apps','OReilly');
 
--- BOOK_AUTHORS
+-- AUTHORS (10 entries)
 INSERT INTO BOOK_AUTHORS VALUES
-(1, 'John Writer'),
-(2, 'Jane Data'),
-(3, 'Alan Query');
+(1,'John Writer'),
+(2,'Jane Data'),
+(3,'Alan Query'),
+(4,'Tom Net'),
+(5,'Sara OS'),
+(6,'Ian AI'),
+(7,'Mike Learn'),
+(8,'Clara Cloud'),
+(9,'Nina Secure'),
+(10,'Alex Algo');
 
--- BOOK_COPIES
+-- BOOK COPIES
 INSERT INTO BOOK_COPIES VALUES
-(1, 1, 5),
-(1, 2, 3),
-(2, 1, 4),
-(3, 3, 6);
+(1,1,5),(1,2,3),(2,1,4),(3,3,6);
 
--- BOOK_LOANS
+-- BOOK LOANS
 INSERT INTO BOOK_LOANS VALUES
-(1, 1, 100, '2024-01-01', '2024-01-10'),
-(2, 1, 101, '2024-01-02', '2024-01-11'),
-(3, 3, 102, '2024-01-03', '2024-01-12');
-
+(1,1,100,'2024-01-01','2024-01-10'),
+(2,1,101,'2024-01-02','2024-01-11'),
+(3,3,102,'2024-01-03','2024-01-12');
 
 /* ===============================
-   REQUIRED QUERIES
+   FULL OUTER JOIN QUERY
 ================================ */
 
--- How many copies of "The Lost Tribe" are owned by Sharpstown?
-SELECT bc.Number_Of_Copies
-FROM BOOK_COPIES bc
-JOIN BOOKS b ON bc.BookID = b.BookID
-JOIN LIBRARY_BRANCH lb ON bc.BranchID = lb.BranchID
-WHERE b.Title = 'The Lost Tribe'
-AND lb.BranchName = 'Sharpstown';
-
-
--- How many copies of "The Lost Tribe" are owned by each branch?
-SELECT lb.BranchName, bc.Number_Of_Copies
-FROM BOOK_COPIES bc
-JOIN BOOKS b ON bc.BookID = b.BookID
-JOIN LIBRARY_BRANCH lb ON bc.BranchID = lb.BranchID
-WHERE b.Title = 'The Lost Tribe';
-
-
--- Borrowers with no books checked out
-SELECT b.Name
-FROM BORROWER b
-LEFT JOIN BOOK_LOANS bl ON b.CardNo = bl.CardNo
-WHERE bl.CardNo IS NULL;
-
-
--- Books loaned from Sharpstown with borrower name
-SELECT bk.Title, br.Name, bl.DateOut, bl.DateDue
+SELECT bl.BookID, bl.BranchID, bl.CardNo,
+       bk.Title, bk.PublisherName,
+       br.Name,
+       bl.DateOut, bl.DateDue
 FROM BOOK_LOANS bl
-JOIN BOOKS bk ON bl.BookID = bk.BookID
-JOIN BORROWER br ON bl.CardNo = br.CardNo
-JOIN LIBRARY_BRANCH lb ON bl.BranchID = lb.BranchID
-WHERE lb.BranchName = 'Sharpstown';
+LEFT JOIN BOOKS bk ON bl.BookID = bk.BookID
+LEFT JOIN BORROWER br ON bl.CardNo = br.CardNo
 
+UNION
 
--- Book title + author name
-SELECT b.Title, ba.AuthorName
-FROM BOOKS b
-JOIN BOOK_AUTHORS ba ON b.BookID = ba.BookID;
+SELECT bl.BookID, bl.BranchID, bl.CardNo,
+       bk.Title, bk.PublisherName,
+       br.Name,
+       bl.DateOut, bl.DateDue
+FROM BOOK_LOANS bl
+RIGHT JOIN BOOKS bk ON bl.BookID = bk.BookID
+RIGHT JOIN BORROWER br ON bl.CardNo = br.CardNo;
+
+/* ===============================
+   STORED PROCEDURES
+================================ */
+
+DELIMITER //
+
+CREATE PROCEDURE LostTribeSharpstown()
+BEGIN
+    SELECT bc.Number_Of_Copies
+    FROM BOOK_COPIES bc
+    JOIN BOOKS b ON bc.BookID = b.BookID
+    JOIN LIBRARY_BRANCH lb ON bc.BranchID = lb.BranchID
+    WHERE b.Title = 'The Lost Tribe'
+    AND lb.BranchName = 'Sharpstown';
+END //
+
+CREATE PROCEDURE LostTribeAllBranches()
+BEGIN
+    SELECT lb.BranchName, bc.Number_Of_Copies
+    FROM BOOK_COPIES bc
+    JOIN BOOKS b ON bc.BookID = b.BookID
+    JOIN LIBRARY_BRANCH lb ON bc.BranchID = lb.BranchID
+    WHERE b.Title = 'The Lost Tribe';
+END //
+
+CREATE PROCEDURE BorrowersWithoutLoans()
+BEGIN
+    SELECT b.Name
+    FROM BORROWER b
+    LEFT JOIN BOOK_LOANS bl ON b.CardNo = bl.CardNo
+    WHERE bl.CardNo IS NULL;
+END //
+
+DELIMITER ;
