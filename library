@@ -174,7 +174,8 @@ RIGHT JOIN BORROWER br ON bl.CardNo = br.CardNo;
 
 DELIMITER //
 
-CREATE PROCEDURE LostTribeSharpstown()
+CREATE PROCEDURE LostTribeSharpstown
+AS
 BEGIN
     SELECT bc.Number_Of_Copies
     FROM BOOK_COPIES bc
@@ -184,7 +185,8 @@ BEGIN
     AND lb.BranchName = 'Sharpstown';
 END //
 
-CREATE PROCEDURE LostTribeAllBranches()
+CREATE PROCEDURE LostTribeAllBranches
+AS
 BEGIN
     SELECT lb.BranchName, bc.Number_Of_Copies
     FROM BOOK_COPIES bc
@@ -193,7 +195,8 @@ BEGIN
     WHERE b.Title = 'The Lost Tribe';
 END //
 
-CREATE PROCEDURE BorrowersWithoutLoans()
+CREATE PROCEDURE BorrowersWithoutLoans
+AS
 BEGIN
     SELECT b.Name
     FROM BORROWER b
